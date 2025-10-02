@@ -1,35 +1,64 @@
 // frontend/src/App.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import './App.css';
 import LoginPage from './pages/LoginPage';
 import StudentsPage from './pages/StudentsPage';
+import CoursesPage from './pages/CoursesPage'; // Import the new page
+import CourseDetailPage from './pages/CourseDetailPage';
+import AttendancePage from './pages/AttendancePage';
 
 function App() {
-  // Check for a token in localStorage when the app loads
   const [token, setToken] = useState(localStorage.getItem('token'));
 
   const handleLoginSuccess = (newToken) => {
-    // Store the token in localStorage and in state
     localStorage.setItem('token', newToken);
     setToken(newToken);
   };
 
   const handleLogout = () => {
-    // Clear the token from localStorage and state
     localStorage.removeItem('token');
     setToken(null);
   };
 
   return (
-    <div>
-      {token ? (
-        // If the user is logged in, show the Students page
-        <StudentsPage onLogout={handleLogout} />
-      ) : (
-        // Otherwise, show the Login page
-        <LoginPage onLoginSuccess={handleLoginSuccess} />
+    <BrowserRouter>
+      {token && (
+        <nav>
+          <Link to="/students">Students</Link> | <Link to="/courses">Courses</Link>
+          <button onClick={handleLogout} style={{ marginLeft: '20px' }}>Logout</button>
+        </nav>
       )}
-    </div>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            token ? <Navigate to="/students" /> : <LoginPage onLoginSuccess={handleLoginSuccess} />
+          }
+        />
+        <Route
+          path="/students"
+          element={token ? <StudentsPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/courses"
+          element={token ? <CoursesPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/courses/:courseId"
+          element={token ? <CourseDetailPage /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/sessions/:sessionId/attendance"
+          element={token ? <AttendancePage /> : <Navigate to="/login" />}
+        />
+        {/* Default route */}
+        <Route
+          path="*"
+          element={<Navigate to={token ? "/students" : "/login"} />}
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

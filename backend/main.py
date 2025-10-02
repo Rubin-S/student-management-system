@@ -244,3 +244,85 @@ def seed_database(
     db.commit()
 
     return {"detail": "Database has been seeded with sample data."}
+
+# --- SESSION & ATTENDANCE ENDPOINTS ---
+@app.post("/courses/{course_id}/sessions/", response_model=schemas.Session, status_code=status.HTTP_201_CREATED)
+def create_session_for_course(
+    course_id: int,
+    session: schemas.SessionCreate, # Use the new schema here
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    db_course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not db_course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    db_session = models.Session(**session.model_dump(), course_id=course_id)
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+    return db_session
+
+@app.get("/courses/{course_id}/sessions/", response_model=List[schemas.Session])
+def read_sessions_for_course(
+    course_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Retrieve all sessions for a specific course.
+    """
+    sessions = db.query(models.Session).filter(models.Session.course_id == course_id).all()
+    return sessions
+
+# NOTE: For a real app, you'd fetch students enrolled in the course. For now, we fetch all students.
+@app.get("/sessions/{session_id}/attendance/", response_model=List[schemas.StudentAttendance])
+def get_attendance_for_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    # Fetch all students (in a real app, this would be students for the session's course)
+    all_students = db.query(models.Student).all()
+
+    # Fetch existing attendance records for this session
+    attendance_records = db.query(models.Attendance).filter(models.Attendance.session_id == session_id).all()
+    attendance_map = {record.student_id: record.status for record in attendance_records}
+
+    # Combine student list with their attendance status
+    response_data = []
+    for student in all_students:
+        response_data.append({
+            "student": student,
+            "status": attendance_map.get(student.id) # Will be None if not marked yet
+        })
+    return response_data
+
+@app.post("/sessions/{session_id}/attendance/", status_code=status.HTTP_200_OK)
+def update_attendance_for_session(
+    session_id: int,
+    update_data: schemas.BulkAttendanceUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    for att_data in update_data.attendances:
+        # Check if an attendance record already exists for this student and session
+        record = db.query(models.Attendance).filter(
+            models.Attendance.session_id == session_id,
+            models.Attendance.student_id == att_data.student_id
+        ).first()
+
+        if record:
+            # If it exists, update the status
+            record.status = att_data.status
+        else:
+            # If not, create a new record
+            new_record = models.Attendance(
+                session_id=session_id,
+                student_id=att_data.student_id,
+                status=att_data.status
+            )
+            db.add(new_record)
+
+    db.commit()
+    return {"detail": "Attendance updated successfully"}
