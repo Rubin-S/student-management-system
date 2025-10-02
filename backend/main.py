@@ -1,5 +1,6 @@
 # backend/main.py
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -16,7 +17,19 @@ app = FastAPI(
     version="0.1.0",
 )
 
+origins = [
+    "http://localhost:5173", # The origin of our React app
+    "http://localhost:5174", # Add other potential ports if needed
+    "http://localhost:3000",
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all methods
+    allow_headers=["*"], # Allows all headers
+)
 
 # --- Endpoints ---
 @app.get("/")
