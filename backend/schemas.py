@@ -1,5 +1,6 @@
 # backend/schemas.py
 from pydantic import BaseModel, EmailStr,  Field
+from pydantic import ConfigDict
 from typing import Optional, List
 from datetime import date, datetime 
 from .models import AttendanceStatus
@@ -18,9 +19,7 @@ class StudentCreate(StudentBase):
 # Model for reading a student (includes the ID)
 class Student(StudentBase):
     id: int
-
-    class Config:
-        from_attributes = True # Formerly orm_mode
+    model_config = ConfigDict(from_attributes=True)
 
 # Schema for creating a user
 class UserCreate(BaseModel):

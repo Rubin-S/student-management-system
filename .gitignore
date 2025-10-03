@@ -1,0 +1,17 @@
+# .gitignore
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+.env
+
+# Test databases
+test.db
+sis.db
+
+# IDE / OS files
+.vscode/
+.idea/
+.DS_Store
