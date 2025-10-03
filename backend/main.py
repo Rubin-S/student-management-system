@@ -260,7 +260,7 @@ def seed_database(
     Populates the database with a rich set of sample data.
     Deletes existing data before adding new records.
     """
-    current_user: models.User = Depends(auth.get_current_user)
+    # current_user: models.User = Depends(auth.get_current_user)
     # 1. Clear existing data in the correct order to avoid foreign key errors
     db.query(models.Attendance).delete()
     db.query(models.Submission).delete()
