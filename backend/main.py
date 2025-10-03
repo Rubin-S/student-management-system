@@ -30,6 +30,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=[
+        "https://student-management-system-two-virid.vercel.app",
+        "http://localhost:3000"  # for local development
+    ],
     allow_origin_regex=settings.CORS_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"], # Allows all methods
