@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # Add this line
     DATABASE_URL: str
+    CORS_ORIGINS: str
 
     # Keep all the mail settings
     MAIL_USERNAME: str
