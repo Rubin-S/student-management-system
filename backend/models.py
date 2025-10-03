@@ -3,6 +3,7 @@ import enum
 from sqlalchemy import Column, Integer, String, Date, Enum, ForeignKey, DateTime, Float
 from sqlalchemy.orm import relationship 
 from .database import Base
+from datetime import datetime
 
 class AttendanceStatus(str, enum.Enum):
     PRESENT = "present"
@@ -125,3 +126,15 @@ class Milestone(Base):
     project_id = Column(Integer, ForeignKey("research_projects.id"))
 
     project = relationship("ResearchProject", back_populates="milestones")
+
+# --- NEW: AuditLog Model ---
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    action = Column(String, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    details = Column(String, nullable=True)
+
+    user = relationship("User")

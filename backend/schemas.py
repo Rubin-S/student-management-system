@@ -177,3 +177,12 @@ class Milestone(MilestoneBase):
     project_id: int
     class Config:
         from_attributes = True
+
+class AuditLog(BaseModel):
+    id: int
+    timestamp: datetime
+    action: str
+    user_id: int
+    details: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)

@@ -102,7 +102,7 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 
 @app.post("/students/", response_model=schemas.Student, status_code=status.HTTP_201_CREATED)
 def create_student(
-    student: schemas.StudentCreate, 
+    student: schemas.StudentCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
@@ -110,6 +110,17 @@ def create_student(
     db.add(new_student)
     db.commit()
     db.refresh(new_student)
+
+    # --- ADD AUDIT LOG ENTRY ---
+    log_entry = models.AuditLog(
+        user_id=current_user.id,
+        action="CREATE_STUDENT",
+        details=f"Created student '{new_student.first_name} {new_student.last_name}' with ID {new_student.id}."
+    )
+    db.add(log_entry)
+    db.commit()
+    # -------------------------
+
     return new_student
 
 @app.get("/students/", response_model=List[schemas.Student])
@@ -638,3 +649,17 @@ def update_milestone(
     db.commit()
     db.refresh(db_milestone)
     return db_milestone
+
+
+@app.get("/audit-logs/", response_model=List[schemas.AuditLog])
+def read_audit_logs(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Retrieve audit log entries, newest first.
+    """
+    logs = db.query(models.AuditLog).order_by(models.AuditLog.timestamp.desc()).offset(skip).limit(limit).all()
+    return logs 
