@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     # Add this line
     DATABASE_URL: str
     CORS_ORIGINS: str
-
+    CORS_ORIGIN_REGEX: str
     # Keep all the mail settings
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
