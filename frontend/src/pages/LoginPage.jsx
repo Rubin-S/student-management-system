@@ -1,6 +1,7 @@
 // frontend/src/pages/LoginPage.jsx
 import React, { useState } from 'react';
 import api from '../api'; // Import our new api client
+import { Button, TextField, Box, Typography } from '@mui/material';
 
 function LoginPage({ onLoginSuccess }) {
   // State to hold the user's input
@@ -36,30 +37,43 @@ function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <div>
-          <label>Email:</label>
-          <input
-            type="email"
-            placeholder="user@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            placeholder="********"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit">Login</button>
-      </form>
-    </div>
+  <Box component="form" onSubmit={handleLogin} sx={{ mt: 1, maxWidth: '400px', margin: 'auto' }}>
+    <Typography component="h1" variant="h5">
+      Login
+    </Typography>
+    <TextField
+      margin="normal"
+      required
+      fullWidth
+      id="email"
+      label="Email Address"
+      name="email"
+      autoComplete="email"
+      autoFocus
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+    />
+    <TextField
+      margin="normal"
+      required
+      fullWidth
+      name="password"
+      label="Password"
+      type="password"
+      id="password"
+      autoComplete="current-password"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+    />
+    <Button
+      type="submit"
+      fullWidth
+      variant="contained"
+      sx={{ mt: 3, mb: 2 }}
+    >
+      Sign In
+    </Button>
+  </Box>
   );
 }
 

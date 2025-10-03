@@ -2,25 +2,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';
+import toast from 'react-hot-toast';
+import { Box, Button, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Radio, RadioGroup, FormControlLabel, CircularProgress } from '@mui/material';
 
 function AttendancePage() {
   const { sessionId } = useParams();
   const [attendanceData, setAttendanceData] = useState([]);
-  const [session, setSession] = useState(null); // Optional: to display session info
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAttendanceData = async () => {
       try {
         const response = await api.get(`/sessions/${sessionId}/attendance/`);
-        // Initialize status to 'absent' if it's null (not yet marked)
         const formattedData = response.data.map(item => ({
           ...item,
           status: item.status || 'absent'
         }));
         setAttendanceData(formattedData);
       } catch (error) {
-        console.error("Failed to fetch attendance data:", error);
+        toast.error("Failed to fetch attendance data.");
       } finally {
         setLoading(false);
       }
@@ -35,48 +35,56 @@ function AttendancePage() {
   };
 
   const handleSaveAttendance = async () => {
-    try {
-      const payload = {
-        attendances: attendanceData.map(item => ({
-          student_id: item.student.id,
-          status: item.status
-        }))
-      };
-      await api.post(`/sessions/${sessionId}/attendance/`, payload);
-      alert('Attendance saved successfully!');
-    } catch (error) {
-      console.error('Failed to save attendance:', error);
-      alert('Failed to save attendance.');
-    }
+    const payload = {
+      attendances: attendanceData.map(item => ({
+        student_id: item.student.id,
+        status: item.status
+      }))
+    };
+    const promise = api.post(`/sessions/${sessionId}/attendance/`, payload);
+
+    toast.promise(promise, {
+        loading: 'Saving attendance...',
+        success: 'Attendance saved successfully!',
+        error: 'Failed to save attendance.',
+    });
   };
 
-  if (loading) return <div>Loading attendance...</div>;
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
 
   return (
-    <div>
-      <h2>Attendance for Session on {session ? session.date : sessionId}</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Student Name</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {attendanceData.map(({ student, status }) => (
-            <tr key={student.id}>
-              <td>{student.first_name} {student.last_name}</td>
-              <td>
-                <label><input type="radio" name={`status-${student.id}`} value="present" checked={status === 'present'} onChange={() => handleStatusChange(student.id, 'present')} /> Present</label>
-                <label><input type="radio" name={`status-${student.id}`} value="absent" checked={status === 'absent'} onChange={() => handleStatusChange(student.id, 'absent')} /> Absent</label>
-                <label><input type="radio" name={`status-${student.id}`} value="late" checked={status === 'late'} onChange={() => handleStatusChange(student.id, 'late')} /> Late</label>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <button onClick={handleSaveAttendance} style={{ marginTop: '20px' }}>Save Attendance</button>
-    </div>
+    <Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4">Take Attendance</Typography>
+        <Button variant="contained" onClick={handleSaveAttendance}>Save Attendance</Button>
+      </Box>
+      <Paper>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ fontWeight: 'bold' }}>Student Name</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {attendanceData.map(({ student, status }) => (
+                <TableRow key={student.id}>
+                  <TableCell>{student.first_name} {student.last_name}</TableCell>
+                  <TableCell>
+                    <RadioGroup row value={status} onChange={(e) => handleStatusChange(student.id, e.target.value)}>
+                      <FormControlLabel value="present" control={<Radio />} label="Present" />
+                      <FormControlLabel value="absent" control={<Radio />} label="Absent" />
+                      <FormControlLabel value="late" control={<Radio />} label="Late" />
+                    </RadioGroup>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    </Box>
   );
 }
 

@@ -1,6 +1,6 @@
 # backend/models.py
 import enum 
-from sqlalchemy import Column, Integer, String, Date, Enum, ForeignKey 
+from sqlalchemy import Column, Integer, String, Date, Enum, ForeignKey, DateTime, Float
 from sqlalchemy.orm import relationship 
 from .database import Base
 
@@ -16,6 +16,9 @@ class Student(Base):
     first_name = Column(String, index=True)
     last_name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
+
+    submissions = relationship("Submission", back_populates="student")
+
 
 class Course(Base):
     __tablename__ = "courses"
@@ -53,3 +56,72 @@ class Attendance(Base):
 
     session = relationship("Session", back_populates="attendance_records")
     student = relationship("Student")
+
+class Assignment(Base):
+    __tablename__ = "assignments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String)
+    due_date = Column(DateTime)
+    course_id = Column(Integer, ForeignKey("courses.id"))
+
+    course = relationship("Course")
+    submissions = relationship("Submission", back_populates="assignment")
+
+class Submission(Base):
+    __tablename__ = "submissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    assignment_id = Column(Integer, ForeignKey("assignments.id"))
+    student_id = Column(Integer, ForeignKey("students.id"))
+    submission_date = Column(DateTime)
+    file_path = Column(String) # Path to the stored file
+
+    assignment = relationship("Assignment", back_populates="submissions")
+    student = relationship("Student", back_populates="submissions")
+
+class Grade(Base):
+    __tablename__ = "grades"
+
+    id = Column(Integer, primary_key=True, index=True)
+    assignment_id = Column(Integer, ForeignKey("assignments.id"))
+    student_id = Column(Integer, ForeignKey("students.id"))
+    score = Column(Float)
+    comments = Column(String, nullable=True)
+
+    assignment = relationship("Assignment")
+    student = relationship("Student")
+
+# --- NEW: MilestoneStatus Enum ---
+class MilestoneStatus(str, enum.Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+
+# --- NEW: ResearchProject Model ---
+class ResearchProject(Base):
+    __tablename__ = "research_projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String)
+    start_date = Column(Date)
+    end_date = Column(Date, nullable=True)
+    student_id = Column(Integer, ForeignKey("students.id"))
+
+    student = relationship("Student")
+    milestones = relationship("Milestone", back_populates="project")
+
+# --- NEW: Milestone Model ---
+class Milestone(Base):
+    __tablename__ = "milestones"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String, nullable=True)
+    due_date = Column(Date)
+    status = Column(Enum(MilestoneStatus), default=MilestoneStatus.PENDING)
+    project_id = Column(Integer, ForeignKey("research_projects.id"))
+
+    project = relationship("ResearchProject", back_populates="milestones")
