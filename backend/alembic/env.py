@@ -35,6 +35,7 @@ if config.config_file_name is not None:
 # --- MODIFICATION 3: Import your models' Base ---
 from backend.database import Base
 from backend import models  # Ensure all your models are imported here
+from backend.config import settings
 
 target_metadata = Base.metadata
 # ----------------------------------------------
@@ -80,11 +81,11 @@ def run_migrations_online() -> None:
     # This block reads the DATABASE_URL from your .env file
     # and sets it as the sqlalchemy.url for this run.
     config_section = config.get_section(config.config_ini_section)
-    config_section["sqlalchemy.url"] = os.environ["DATABASE_URL"]
+    config_section["sqlalchemy.url"] = settings.DATABASE_URL
     # -------------------------------------------------------
 
     connectable = engine_from_config(
-        config_section, # Use the modified config section
+        config_section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

@@ -2,6 +2,10 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    # Add this line
+    DATABASE_URL: str
+
+    # Keep all the mail settings
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
     MAIL_FROM: str
